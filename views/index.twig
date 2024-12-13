@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Available Books</title>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+  <h1 id="completedTasksCount">Completed Tasks: 0</h1>
+
+
+  <button id="getTasksButton">Chercher</button>
+
+  <script>
+    const socket = io();
+
+
+
+    document.getElementById('getTasksButton').addEventListener('click', () => {
+      socket.emit('getCompletedTasks');
+    });
+
+
+    socket.on('completedTasksCount', (count) => {
+      document.getElementById('completedTasksCount').innerText = `Completed Tasks: ${count}`;
+    });
+
+
+  </script>
+</body>
+</html>

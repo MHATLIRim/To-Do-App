@@ -1,0 +1,55 @@
+const express =require('express');
+const mongoose=require('mongoose');
+const bodyParser = require('body-parser');
+const http = require('http');
+const socketIo = require ('socket.io');
+
+const taskRoutes =require ('./routes/task');
+const { Task } = require ('./models/Task');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
+
+mongoose.connect('mongodb://localhost:27017/todoDB')
+  .then(() => {
+    console.log('Connected to MongoDB');
+  })
+  .catch(err => {
+    console.error('Connection error', err);
+  });
+
+
+  app.use(bodyParser.json()) ;
+  app.use('/tasks' , taskRoutes);
+
+
+
+  app.set('view engine' , 'twig') ;
+  app.set ('views' , './views');
+
+  
+io.on('connection', (socket) => {
+    console.log('New client connected');
+    socket.on('getCompletedTasks', async () => {
+      try {
+        const completedTasksCount = await Task.countDocuments({ completed: true });
+        socket.emit('completedTasksCount', completedTasksCount);
+      } catch (error) {
+        console.error('Error fetching available tasks count', error);
+      }
+    });
+    socket.on('disconnect', () => {
+      console.log('Client disconnected');
+    });
+  });
+  
+  app.get('/', (req, res) => {
+    res.render('index');
+  });
+  
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
